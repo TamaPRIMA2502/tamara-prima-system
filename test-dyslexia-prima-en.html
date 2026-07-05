@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dyslexia Test — PRIMA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: #3D134B;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #D4AF37;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .test-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 80px 40px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-screen h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            line-height: 1.4;
+        }
+
+        .btn-continue {
+            background: #D4AF37;
+            color: #3D134B;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .btn-continue:hover { background: #e0bf4a; }
+
+        .question-screen {
+            text-align: left;
+            max-width: 550px;
+        }
+
+        .question-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #ffffff;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #3D134B;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 400;
+            line-height: 1.6;
+            margin-bottom: 36px;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .answer-option {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .answer-option:hover { background: rgba(255,255,255,0.15); }
+
+        .answer-option.selected {
+            background: #ffffff;
+            color: #3D134B;
+            border-color: #ffffff;
+        }
+
+        .btn-ok {
+            background: #D4AF37;
+            color: #3D134B;
+            border: none;
+            padding: 10px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Raleway', sans-serif;
+            opacity: 0.4;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ok.enabled { opacity: 1; pointer-events: auto; }
+        .btn-ok.enabled:hover { background: #e0bf4a; }
+
+        .nav-arrows {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-arrow {
+            width: 36px;
+            height: 36px;
+            background: #D4AF37;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-arrow:hover { background: #e0bf4a; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-arrow svg { width: 18px; height: 18px; fill: #3D134B; }
+
+        @media (max-width: 600px) {
+            .test-container { padding: 60px 20px 20px; }
+            .section-screen h2 { font-size: 1.25rem; }
+            .question-text { font-size: 1.1rem; }
+            .answer-option { padding: 12px 14px; font-size: 0.95rem; }
+        }
+
+        .results-screen {
+            text-align: left;
+            max-width: 600px;
+            padding-bottom: 40px;
+        }
+
+        .results-screen h2 {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .results-table { margin-bottom: 32px; }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 140px 1fr 40px;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+
+        .result-row {
+            display: grid;
+            grid-template-columns: 140px 1fr 40px;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .category-name { font-size: 0.95rem; font-weight: 500; }
+
+        .bar-container {
+            position: relative;
+            height: 24px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .bar-fill.level-low { background: #4CAF50; }
+        .bar-fill.level-mid { background: #FFC107; }
+        .bar-fill.level-high { background: #f44336; }
+
+        .bar-markers {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .marker {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 2px;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .marker-30 { left: 30%; }
+        .marker-60 { left: 60%; }
+
+        .percent-value { font-size: 1rem; font-weight: 600; text-align: right; }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .legend-color { width: 16px; height: 16px; border-radius: 3px; }
+        .legend-low { background: #4CAF50; }
+        .legend-mid { background: #FFC107; }
+        .legend-high { background: #f44336; }
+
+        .interpretation {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 16px;
+            margin-bottom: 40px;
+        }
+
+        .interpretation h3 { font-size: 1.1rem; margin-bottom: 16px; font-weight: 500; }
+        .interpretation p { font-size: 0.95rem; line-height: 1.6; margin-bottom: 12px; opacity: 0.9; }
+        .interpretation strong { color: #D4AF37; }
+
+        .cta-box {
+            text-align: center;
+            padding: 32px;
+            margin-top: 48px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .cta-box h3 { font-size: 1.1rem; margin-bottom: 12px; }
+        .cta-box p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 28px; }
+        .cta-box .btn-continue { display: inline-block; text-decoration: none; padding: 16px 40px; }
+
+        .form-screen { text-align: left; max-width: 500px; }
+        .form-container { width: 100%; }
+        .form-question { font-size: 1.4rem; font-weight: 400; margin-bottom: 12px; }
+        .form-subtitle { font-size: 0.95rem; opacity: 0.7; margin-bottom: 32px; }
+        .form-fields { margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 8px; opacity: 0.8; }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            font-family: 'Raleway', sans-serif;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus { border-bottom-color: #D4AF37; }
+        .form-group input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .result-gate-screen {
+            max-width: 560px;
+            text-align: center;
+        }
+
+        .result-gate-screen h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .result-gate-screen p {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 28px;
+        }
+
+        .result-status {
+            min-height: 24px;
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: #D4AF37;
+        }
+
+        .btn-continue.loading {
+            opacity: 0.65;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="test-container" id="testContainer"></div>
+
+<div class="nav-arrows">
+    <button class="nav-arrow" id="btnPrev" onclick="prevScreen()" disabled>
+        <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+    </button>
+    <button class="nav-arrow" id="btnNext" onclick="nextScreen()">
+        <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+    </button>
+</div>
+
+<script>
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXcyeq7TjEG2A9bh3VlZPvEz20z8wlf9mmoqHdJsqVCbmANIaDr9WEuxHHGds4kzo_qw/exec';
+
+const sections = [
+    { title: "Section 1: General Signs", questions: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { title: "Section 2: Vision, Reading and Spelling", questions: [10, 11, 12, 13, 14, 15, 16, 17] },
+    { title: "Section 3: Hearing, Speech, Writing and Motor Skills", questions: [18, 19, 20, 21, 22, 23, 24, 25] },
+    { title: "Section 4: Math, Time and Memory", questions: [26, 27, 28, 29, 30, 31, 32] },
+    { title: "Section 5: Behavior, Health and Development", questions: [33, 34, 35, 36, 37, 38, 39, 40, 41] }
+];
+
+const questions = {
+    1: "Seems very bright and expresses ideas easily, but reads and writes well below the level expected for their age",
+    2: "Is often labeled lazy, careless or badly behaved — as if they simply aren't trying hard enough",
+    3: "Learns unevenly, but not poorly enough for the school to officially provide support",
+    4: "May have above-average intelligence, though school results don't show it: does better orally than in writing",
+    5: "Thinks less of themselves than they deserve; feels ashamed of their difficulties; gets upset quickly when asked to read aloud",
+    6: "May be highly gifted in art, music, sports, mechanics or design — often a natural storyteller",
+    7: "Daydreams, seems lost in their own world, loses track of time",
+    8: "Struggles to sustain attention: sometimes seems dreamy, sometimes overly restless",
+    9: "Learns best through hands-on experience, demonstrations, experiments and visual examples",
+    10: "May complain of dizziness, headaches or stomach discomfort while reading",
+    11: "Confuses letters, numbers, words or sequences; doesn't always grasp verbal explanations right away",
+    12: "Reading or writing shows repetitions, omissions, or transposed letters and numbers",
+    13: "While reading or writing, may feel as if something is moving before their eyes",
+    14: "Seems to have vision problems, yet eye exams show nothing",
+    15: "May have exceptionally sharp eyesight or, on the contrary, difficulties with depth and peripheral perception",
+    16: "Reads slowly and rereads often, yet only partly grasps the meaning",
+    17: "Writes words the way they sound; spelling is inconsistent",
+    18: "Has very sensitive hearing: notices sounds others miss, and is easily distracted by them",
+    19: "May struggle to put thoughts into words: speaks in fragments, leaves sentences unfinished, stutters under stress",
+    20: "Sometimes mangles long words or swaps syllables and phrases around",
+    21: "Finds writing or copying text difficult; holds the pencil unusually; handwriting is unstable",
+    22: "Appears clumsy; struggles with ball games or team sports",
+    23: "Has difficulty with both fine and gross motor skills; may get motion sickness easily",
+    24: "May use both hands and often confuses left/right and over/under",
+    25: "Absorbs information better through movement and touch than through listening",
+    26: "Struggles with time: gets confused by schedules and task sequences, often runs late",
+    27: "Counts on fingers when calculating; knows the right answer but can't put it down neatly on paper",
+    28: "Can count aloud, but gets lost when counting objects or handling money",
+    29: "Handles simple arithmetic fine, but gets stuck on word problems",
+    30: "Easily remembers personal experiences: events, places, faces",
+    31: "Finds it harder to remember facts, sequences and information not tied to lived experience",
+    32: "Thinks mostly in images and sensations rather than words; inner dialogue is weak",
+    33: "May be either extremely disorganized or, on the contrary, overly meticulous",
+    34: "Behavior swings: sometimes the life of the party, sometimes explosive, sometimes very quiet",
+    35: "Development was uneven: some milestones came much earlier or later than in peers",
+    36: "Is prone to ear infections and unusually sensitive to certain foods or chemicals",
+    37: "Sleeps either very deeply or too lightly",
+    38: "Bedwetting continued longer than in peers",
+    39: "Has an unusual pain threshold — either very high or very low",
+    40: "Has a heightened sense of justice, is emotionally sensitive, strives for perfection",
+    41: "Mistakes and symptoms increase sharply under stress, excitement or poor health"
+};
+
+const answers = {};
+let current = 0;
+let screens = [];
+let userData = {};
+let dataSent = false;
+
+function submitForm() {
+    const name = document.getElementById('userName').value.trim();
+    const email = document.getElementById('userEmail').value.trim();
+    const age = document.getElementById('childAge').value.trim();
+
+    if (!name || !email) {
+        alert('Please fill in your name and email');
+        return;
+    }
+
+    userData = { name, email, age };
+    nextScreen();
+}
+
+function buildScreens() {
+    const container = document.getElementById('testContainer');
+    let html = '';
+    let screenIndex = 0;
+
+    sections.forEach((section, sIdx) => {
+        const isFirst = screenIndex === 0;
+        html += `
+            <div class="screen section-screen ${isFirst ? 'active' : ''}" data-screen="${screenIndex}">
+                <h2>${section.title}</h2>
+                <button class="btn-continue" onclick="nextScreen()">Continue</button>
+            </div>
+        `;
+        screens.push({ type: 'section', index: screenIndex });
+        screenIndex++;
+
+        if (sIdx === 0) {
+            html += `
+                <div class="screen form-screen" data-screen="${screenIndex}">
+                    <div class="form-container">
+                        <p class="form-question">Where should we send the results?</p>
+                        <p class="form-subtitle">We'll also send recommendations for the next steps</p>
+                        <div class="form-fields">
+                            <div class="form-group">
+                                <label>Your full name *</label>
+                                <input type="text" id="userName" placeholder="e.g. Olena Kovalenko" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="userEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Child's age</label>
+                                <input type="text" id="childAge" placeholder="e.g. 8 years old">
+                            </div>
+                        </div>
+                        <button class="btn-ok enabled" onclick="submitForm()">OK</button>
+                    </div>
+                </div>
+            `;
+            screens.push({ type: 'form', index: screenIndex });
+            screenIndex++;
+        }
+
+        section.questions.forEach(qNum => {
+            html += `
+                <div class="screen question-screen" data-screen="${screenIndex}">
+                    <div class="question-number">${qNum}</div>
+                    <p class="question-text">${questions[qNum]}</p>
+                    <div class="answers">
+                        <button class="answer-option" onclick="select(this, ${qNum}, 2)">Yes</button>
+                        <button class="answer-option" onclick="select(this, ${qNum}, 1)">Partly</button>
+                        <button class="answer-option" onclick="select(this, ${qNum}, 0)">Rarely or never</button>
+                    </div>
+                    <button class="btn-ok" onclick="nextScreen()">OK</button>
+                </div>
+            `;
+            screens.push({ type: 'question', index: screenIndex, qNum: qNum });
+            screenIndex++;
+        });
+    });
+
+    html += `
+        <div class="screen result-gate-screen" data-screen="${screenIndex}">
+            <h2>Test completed</h2>
+            <p>To see the result, press the button below. We will save your answers first, then show your result on screen.</p>
+            <button class="btn-continue" id="btnGetResults" onclick="handleGetResults()">Get result</button>
+            <div class="result-status" id="saveStatus"></div>
+        </div>
+    `;
+    screens.push({ type: 'resultGate', index: screenIndex });
+    screenIndex++;
+
+    html += `
+        <div class="screen results-screen" data-screen="${screenIndex}">
+            <h2>Test Results</h2>
+            <div class="results-table">
+                <div class="table-header">
+                    <span>Area</span>
+                    <div class="scale-labels">
+                        <span>mild</span>
+                        <span>moderate</span>
+                        <span>significant</span>
+                    </div>
+                    <span style="text-align: right">%</span>
+                </div>
+                <div id="results-list"></div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color legend-low"></div><span>under 30%</span></div>
+                <div class="legend-item"><div class="legend-color legend-mid"></div><span>30–60%</span></div>
+                <div class="legend-item"><div class="legend-color legend-high"></div><span>over 60%</span></div>
+            </div>
+            <div class="interpretation" id="interpretation"></div>
+            <div class="cta-box">
+                <h3>Next step — an intro call</h3>
+                <p>A 20-minute call. I look at your results, you tell me about your child. We decide what to do next.</p>
+                <a href="https://calendly.com/tamaraprima/session" target="_blank" class="btn-continue">Book a call →</a>
+            </div>
+        </div>
+    `;
+    screens.push({ type: 'results', index: screenIndex });
+    container.innerHTML = html;
+}
+
+function updateProgress() {
+    const pct = ((current + 1) / screens.length) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function showScreen(i) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelector(`[data-screen="${i}"]`).classList.add('active');
+    document.getElementById('btnPrev').disabled = (i === 0);
+    updateProgress();
+
+    if (screens[i] && screens[i].type === 'results') {
+        renderResults();
+    }
+}
+
+function nextScreen() {
+    const scr = screens[current];
+
+    if (scr && scr.type === 'form') {
+        const name = document.getElementById('userName').value.trim();
+        const email = document.getElementById('userEmail').value.trim();
+        if (!name || !email) {
+            alert('Please fill in your name and email');
+            return;
+        }
+        userData = { name, email, age: document.getElementById('childAge').value.trim() };
+    }
+
+    if (scr && scr.type === 'resultGate') {
+        handleGetResults();
+        return;
+    }
+
+    if (current < screens.length - 1) {
+        current++;
+        showScreen(current);
+    }
+}
+
+function prevScreen() {
+    if (current > 0) { current--; showScreen(current); }
+}
+
+function select(el, qNum, value) {
+    answers[qNum] = value;
+    el.parentElement.querySelectorAll('.answer-option').forEach(a => a.classList.remove('selected'));
+    el.classList.add('selected');
+    el.parentElement.nextElementSibling.classList.add('enabled');
+    setTimeout(nextScreen, 500);
+}
+
+const categories = {
+    disorientation: { name: "Disorientation", questions: [1,2,3,4,5,6,7,8,9,11,12,13,14,15,18,19,20,21,22,23,24,26,28,29,30,31,32,33,34,35,36,37,38,39,41] },
+    reading: { name: "Reading", questions: [1,3,5,10,11,12,13,14,15,16,17,29,30,31] },
+    attention: { name: "Attention", questions: [2,3,4,7,8,18,30,31,32,33,34,35,36,37] },
+    math: { name: "Math and time", questions: [3,7,26,27,28,29,30,31,33,35,36] },
+    coordination: { name: "Coordination", questions: [7,21,22,23,24,33,35,36] },
+    selfesteem: { name: "Self-esteem", questions: [1,2,3,4,5,27,28,29,30,31,33,34,35,36,38,39,40,41] }
+};
+
+function calculateResults() {
+    const results = {};
+    for (let catKey in categories) {
+        const cat = categories[catKey];
+        let score = 0;
+        cat.questions.forEach(qNum => { if (answers[qNum] !== undefined) score += answers[qNum]; });
+        results[catKey] = { name: cat.name, percent: Math.round((score / (cat.questions.length * 2)) * 100) };
+    }
+    return results;
+}
+
+function renderResults() {
+    const results = calculateResults();
+    let html = '';
+    let highCount = 0, midCount = 0;
+
+    for (let catKey in results) {
+        const cat = results[catKey];
+        let levelClass = 'level-low';
+        if (cat.percent >= 60) { levelClass = 'level-high'; highCount++; }
+        else if (cat.percent >= 30) { levelClass = 'level-mid'; midCount++; }
+
+        html += `
+            <div class="result-row">
+                <span class="category-name">${cat.name}</span>
+                <div class="bar-container">
+                    <div class="bar-fill ${levelClass}" style="width: ${cat.percent}%;"></div>
+                    <div class="bar-markers"><div class="marker marker-30"></div><div class="marker marker-60"></div></div>
+                </div>
+                <span class="percent-value">${cat.percent}</span>
+            </div>`;
+    }
+    document.getElementById('results-list').innerHTML = html;
+
+    const interp = document.getElementById('interpretation');
+    let interpHtml = '<h3>How to read the results</h3>';
+    if (highCount >= 3) {
+        interpHtml += `<p><strong>Over 60% in three or more areas</strong> — is a serious signal.</p><p>Dyslexic children are bright. They learn to mask their difficulties so well that adults often do not see how much energy it costs. But tension builds up inside.</p><p>Daily stress from learning that does not work is a direct path to exhaustion and breakdowns. I recommend not postponing this.</p>`;
+    } else if (midCount >= 3 || highCount >= 1) {
+        interpHtml += `<p><strong>30–60% у кількох показниках</strong> — means there is something to work on.</p><p>The child is already spending extra energy on things that come easily to others. The earlier we start, the sooner that energy can go into development instead of struggle.</p>`;
+    } else {
+        interpHtml += `<p><strong>Under 30% in most areas</strong> — means signs are minimal or absent.</p><p>If something still worries you, we can check it during an intro call and clarify your doubts.</p>`;
+    }
+    interpHtml += '<p style="margin-top: 16px; opacity: 0.7;">The results are the beginning of a conversation.</p>';
+    interp.innerHTML = interpHtml;
+}
+
+async function handleGetResults() {
+    const btn = document.getElementById('btnGetResults');
+    const status = document.getElementById('saveStatus');
+
+    if (dataSent) {
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.textContent = 'Saving...';
+    }
+
+    if (status) {
+        status.textContent = 'Saving your result...';
+    }
+
+    try {
+        await sendToGoogleSheets();
+
+        if (status) {
+            status.textContent = 'Done. Showing your result.';
+        }
+
+        if (current < screens.length - 1) {
+            current++;
+            showScreen(current);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+
+        if (status) {
+            status.textContent = 'Could not save the result. Check your internet connection and try again.';
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = 'Try again';
+        }
+    }
+}
+
+function sendToGoogleSheets() {
+    const results = calculateResults();
+    const data = {
+        name: userData.name || '',
+        email: userData.email || '',
+        childAge: userData.age || '',
+        disorientation: results.disorientation.percent,
+        reading: results.reading.percent,
+        attention: results.attention.percent,
+        math: results.math.percent,
+        coordination: results.coordination.percent,
+        selfEsteem: results.selfesteem.percent,
+        language: 'EN',
+        source: 'EN test'
+    };
+
+    return fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        dataSent = true;
+        return true;
+    });
+}
+
+buildScreens();
+updateProgress();
+</script>
+
+</body>
+</html>
